@@ -5,6 +5,7 @@ on:
   schedule:
     - cron: "30 0 * * *"
   push:
+    branches: [main]
     paths:
       - ".github/workflows/supabase-complete-backup-final.yml"
       - "supabase/functions/backup-broker/index.ts"
