@@ -39,7 +39,7 @@ Deno.serve(async(req)=>{
       }
     }else{
       const {data:platformSettings,error:settingsError}=await admin.from("platform_settings").select("default_app_domain").eq("id",1).maybeSingle();
-      const defaultHost=String(platformSettings?.default_app_domain||"").trim().replace(/^https?:\\/\\//,"").replace(/\\/$/,"");
+      const defaultHost=String(platformSettings?.default_app_domain||"").trim().replace(/^https?:\/\//i,"").replace(/\/$/,"");
       if(settingsError||!defaultHost) return json({error:"Admin invitation redirect is not configured."},500);
       redirectTo=`https://${defaultHost}/auth?mode=admin-invite`;
     }
