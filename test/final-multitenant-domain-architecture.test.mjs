@@ -54,7 +54,7 @@ test("admin invitations do not fall back to the retired GitHub Pages host", () =
   assert.match(invite, /MAHIN_ADMIN_INVITE_REDIRECT/);
   assert.match(invite, /PUBLIC_APP_ORIGIN/);
   assert.match(invite, /default_app_domain/);
-  assert.doesNotMatch(invite, /mahin98250\\.github\\.io\\/Mahin/);
+  assert.equal(invite.includes("mahin98250.github.io/Mahin"), false);
 });
 
 test("runtime recovery redirects are tenant-aware and reject legacy host coupling", () => {
