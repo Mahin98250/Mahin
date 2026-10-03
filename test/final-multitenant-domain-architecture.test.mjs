@@ -46,7 +46,13 @@ const pdfJobs = fs.readFileSync(
   "utf8"
 );
 
-test("admin invitations do not fall back to the retired GitHub Pages host", () => {\n  const invite = fs.readFileSync(\n    new URL("../supabase/functions/platform-invite-admin/index.ts", import.meta.url),\n    "utf8"\n  );\n  assert.match(invite, /MAHIN_ADMIN_INVITE_REDIRECT/);\n  assert.match(invite, /PUBLIC_APP_ORIGIN/);\n  assert.match(invite, /default_app_domain/);\n  assert.doesNotMatch(invite, /mahin98250\\.github\\.io\\/Mahin/);\n});\n\ntest("runtime recovery redirects are tenant-aware and reject legacy host coupling", () => {
+test("admin invitations do not fall back to the retired GitHub Pages host", () => {\n  const invite = fs.readFileSync(\n    new URL("../supabase/functions/platform-invite-admin/index.ts", import.meta.url),\n    "utf8"\n  );
+  assert.match(invite, /MAHIN_ADMIN_INVITE_REDIRECT/);
+  assert.match(invite, /PUBLIC_APP_ORIGIN/);
+  assert.match(invite, /default_app_domain/);
+  assert.doesNotMatch(invite, /mahin98250\\.github\\.io\\/Mahin/);
+});
+\ntest("runtime recovery redirects are tenant-aware and reject legacy host coupling", () => {
   assert.match(recovery, /PUBLIC_APP_ORIGIN/);
   assert.match(recovery, /institute_domains/);
   assert.match(recovery, /tls_status/);
