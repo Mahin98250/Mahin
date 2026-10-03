@@ -258,21 +258,21 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
     });
   };
 
-  const validationError = () => {
-    if (panel === "identity" && (!form.name.trim() || !form.slug.trim())) return "Institute name and portal slug are required.";
+  const validationError = (scope: PanelKey = panel, finalCheck = false) => {
+    if ((scope === "identity" || finalCheck) && (!form.name.trim() || !form.slug.trim())) return "Institute name and portal slug are required.";
     if (form.slug.trim() && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug.trim().toLowerCase())) return "Portal slug can use lowercase letters, numbers and hyphens only.";
-    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return "Please enter a valid institute email.";
+    if ((scope === "contact" || finalCheck) && form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return "Please enter a valid institute email.";
     const academicAny = form.academicYearName.trim() || form.academicYearStartDate || form.academicYearEndDate;
-    if (panel === "academic" && academicAny && (!form.academicYearName.trim() || !form.academicYearStartDate || !form.academicYearEndDate)) return "Academic year name, start date and end date are required together.";
-    if (form.academicYearStartDate && form.academicYearEndDate && form.academicYearEndDate < form.academicYearStartDate) return "Academic year end date must be on or after the start date.";
-    if (form.customRequestTitle.trim() !== "" && form.customRequestDescription.trim() === "") return "Add a description for the custom feature request.";
-    if (form.customRequestTitle.trim() === "" && form.customRequestDescription.trim() !== "") return "Add a title for the custom feature request.";
-    if (!enabledFeatures.size) return "Enable at least one platform feature.";
+    if ((scope === "academic" || finalCheck) && academicAny && (!form.academicYearName.trim() || !form.academicYearStartDate || !form.academicYearEndDate)) return "Academic year name, start date and end date are required together.";
+    if ((scope === "academic" || finalCheck) && form.academicYearStartDate && form.academicYearEndDate && form.academicYearEndDate < form.academicYearStartDate) return "Academic year end date must be on or after the start date.";
+    if ((scope === "custom" || finalCheck) && form.customRequestTitle.trim() !== "" && form.customRequestDescription.trim() === "") return "Add a description for the custom feature request.";
+    if ((scope === "custom" || finalCheck) && form.customRequestTitle.trim() === "" && form.customRequestDescription.trim() !== "") return "Add a title for the custom feature request.";
+    if ((scope === "features" || finalCheck) && !enabledFeatures.size) return "Enable at least one platform feature.";
     return "";
   };
 
   const moveTo = (next: PanelKey) => {
-    const issue = validationError();
+    const issue = validationError(panel, false);
     if (issue && panel === "identity" && next !== "identity") {
       setError(issue);
       return;
@@ -283,7 +283,7 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
   };
 
   const createInstitute = async () => {
-    const issue = validationError();
+    const issue = validationError(panel, true);
     if (issue) {
       setError(issue);
       return;
@@ -623,7 +623,7 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
               <footer style={{ padding: "15px 24px", borderTop: "1px solid #e4e8f0", background: "#fff", display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                 <button type="button" style={button(false)} onClick={() => { const index = PANELS.findIndex((x) => x[0] === panel); setPanel(PANELS[Math.max(0, index - 1)][0] as PanelKey); setError(""); }} disabled={loading || panel === "identity"}>← Previous</button>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {panel !== "review" && <button type="button" style={button(false)} onClick={() => { const index = PANELS.findIndex((x) => x[0] === panel); setPanel(PANELS[Math.min(PANELS.length - 1, index + 1)][0] as PanelKey); setError(validationError()); }}>Next panel →</button>}
+                  {panel !== "review" && <button type="button" style={button(false)} onClick={() => { const index = PANELS.findIndex((x) => x[0] === panel); setPanel(PANELS[Math.min(PANELS.length - 1, index + 1)][0] as PanelKey); setError(validationError(panel)); }}>Next panel →</button>}
                   {panel === "review" && <button type="button" style={button(true)} disabled={loading || !!uploading} onClick={() => void createInstitute()}>{loading ? "Creating institute…" : "Create institute"}</button>}
                 </div>
               </footer>
