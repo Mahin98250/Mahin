@@ -7,7 +7,7 @@ const read = (path) => fs.readFileSync(new URL(path, root), "utf8");
 
 const portal = read("src/admin/ModernAdminPortal.tsx");
 const permissions = read("src/admin/admin-permissions.ts");
-const migration = read("supabase/migrations/20260924200000_admin_effective_permissions_overview.sql");
+const migration = read("supabase/migrations/20261003134213_admin_effective_permissions_overview.sql");
 
 test("Admin navigation is driven by effective institute permissions", () => {
   assert.match(portal, /requiredPermission/);
