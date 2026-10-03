@@ -28,7 +28,21 @@ Deno.serve(async(req)=>{
     if(prepareError) return json({error:prepareError.message},400);
 
     const admin=createClient(url,service,{auth:{autoRefreshToken:false,persistSession:false}});
-    const redirectTo=(Deno.env.get("MAHIN_ADMIN_INVITE_REDIRECT")||"https://mahin98250.github.io/Mahin/auth?mode=admin-invite").trim();
+    const configuredRedirect=String(Deno.env.get("MAHIN_ADMIN_INVITE_REDIRECT")||Deno.env.get("PUBLIC_APP_ORIGIN")||"").trim();
+    let redirectTo="";
+    if(configuredRedirect){
+      try{
+        const base=new URL(configuredRedirect);
+        redirectTo=new URL("/auth?mode=admin-invite",base.origin).toString();
+      }catch{
+        return json({error:"Admin invitation redirect is not configured correctly."},500);
+      }
+    }else{
+      const {data:platformSettings,error:settingsError}=await admin.from("platform_settings").select("default_app_domain").eq("id",1).maybeSingle();
+      const defaultHost=String(platformSettings?.default_app_domain||"").trim().replace(/^https?:\/\//i,"").replace(/\/$/,"");
+      if(settingsError||!defaultHost) return json({error:"Admin invitation redirect is not configured."},500);
+      redirectTo=`https://${defaultHost}/auth?mode=admin-invite`;
+    }
     const {data:invite,error:inviteError}=await admin.auth.admin.inviteUserByEmail(email,{
       data:{mahin_invitation_id:invId,mahin_institute_id:instituteId,mahin_role:roleKey},
       redirectTo
