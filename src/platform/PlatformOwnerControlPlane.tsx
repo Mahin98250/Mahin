@@ -733,7 +733,6 @@ export default function PlatformOwnerControlPlane() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={() => {
-          setCreateOpen(false);
           setActiveSection("institutes");
           setCursor(null);
           invalidatePlatformInstituteStatusCounts();
