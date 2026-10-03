@@ -6,6 +6,7 @@ const root = new URL("../", import.meta.url);
 const read = (path) => fs.readFileSync(new URL(path, root), "utf8");
 
 const controlPlane = read("src/platform/PlatformOwnerControlPlane.tsx");
+const onboardingWizard = read("src/platform/InstituteOnboardingWizard.tsx");
 const client = read("src/platform/platform-tenant-data.ts");
 const migration = read("supabase/migrations/20260923020000_phase9b_owner_lazy_tenant_detail.sql");
 const overviewMigration = read("supabase/migrations/20260924100000_owner_institute_readonly_overview.sql");
@@ -26,10 +27,12 @@ test("Owner directory does not materialize institute collections through direct 
   assert.match(client, /platform_institute_status_counts/);
 });
 
-test("Fast Owner onboarding exposes the real institute creation flow", () => {
+test("Owner onboarding exposes the real multi-panel institute creation flow", () => {
   assert.match(controlPlane, /Create institute/);
-  assert.match(controlPlane, /platform_provision_institute/);
-  assert.match(controlPlane, /Custom domain/);
+  assert.match(controlPlane, /InstituteOnboardingWizard/);
+  assert.match(onboardingWizard, /platform_onboard_institute/);
+  assert.match(onboardingWizard, /Custom domain/);
+  assert.match(onboardingWizard, /Review & create/);
   assert.doesNotMatch(controlPlane, /provisionTimezone|provisionLocale/);
 });
 
