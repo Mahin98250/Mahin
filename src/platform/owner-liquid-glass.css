@@ -566,3 +566,112 @@
   .owner-security-grid{grid-template-columns:1fr}
   .owner-security-factor{flex-direction:column}
 }
+
+
+/* Mahin Owner Portal refresh — clean, calm, responsive operations console */
+.owner-liquid-glass:has(.owner-sidebar){
+  --lg-ink:#172033;
+  --lg-subtle:#667085;
+  --lg-accent:#4f46e5;
+  background:#f4f6fa!important;
+  color:#172033!important;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+}
+.owner-liquid-glass:has(.owner-sidebar)::before,
+.owner-liquid-glass:has(.owner-sidebar)::after{display:none!important}
+.owner-main-shell{min-height:100vh;margin-left:256px!important;background:#f4f6fa!important}
+.owner-sidebar{
+  width:256px!important;box-sizing:border-box;padding:20px 14px!important;
+  background:#111827!important;border-right:1px solid #273244!important;
+  box-shadow:8px 0 28px rgba(16,24,40,.08)!important;backdrop-filter:none!important;
+}
+.owner-sidebar-brand{padding:6px 8px 20px!important;border-bottom:1px solid #273244!important}
+.owner-sidebar-logo{width:42px!important;height:42px!important;border-radius:13px!important;background:#4f46e5!important;box-shadow:none!important;font-size:18px!important;letter-spacing:-.04em}
+.owner-sidebar-brand strong{font-size:14px!important;letter-spacing:-.01em}
+.owner-sidebar-brand span{font-size:11px!important;color:#98a2b3!important}
+.owner-sidebar-nav{padding:18px 0!important}
+.owner-sidebar-group{margin-bottom:22px!important}
+.owner-sidebar-label{padding:0 10px 8px!important;color:#8993a4!important;font-size:9px!important;letter-spacing:.12em!important}
+.owner-sidebar-item{min-height:40px!important;padding:10px 11px!important;margin:3px 0!important;border:1px solid transparent!important;border-radius:10px!important;color:#c5cbd5!important;font-size:12px!important;font-weight:650!important;transform:none!important}
+.owner-sidebar-item:hover{background:#202a3a!important;color:#fff!important;transform:none!important}
+.owner-sidebar-item.active{background:#292e58!important;border-color:#3e4380!important;color:#fff!important;box-shadow:inset 3px 0 #818cf8!important}
+.owner-sidebar-icon{width:22px!important;color:#a5afbf!important}
+.owner-sidebar-item.active .owner-sidebar-icon{color:#c7d2fe!important}
+.owner-sidebar-footer{border-top:1px solid #273244!important;padding-top:14px!important}
+.owner-sidebar-status{color:#aab3c0!important}
+.owner-sidebar-signout{min-height:40px!important;border-color:#344054!important;border-radius:10px!important;background:#1b2534!important;color:#e4e7ec!important}
+.owner-sidebar-signout:hover{background:#273244!important}
+.owner-header{
+  position:relative!important;overflow:visible!important;padding:22px clamp(20px,3vw,40px)!important;
+  color:#172033!important;background:#fff!important;border-bottom:1px solid #e7eaf0!important;
+  border-radius:0!important;box-shadow:0 2px 8px rgba(16,24,40,.025)!important;
+}
+.owner-header::after{display:none!important}
+.owner-header-inner{max-width:1440px!important;min-height:58px}
+.owner-header-inner>div:first-child>div:first-child{color:#667085!important;opacity:1!important;font-size:10px!important;letter-spacing:.11em!important}
+.owner-header h1{color:#101828!important;font-size:26px!important;font-weight:750!important;letter-spacing:-.04em!important}
+.owner-header-inner>div:first-child>div:last-child{color:#667085!important;opacity:1!important}
+.owner-header-actions>span{color:#475467!important;background:#f2f4f7!important;border:1px solid #eaecf0!important;border-radius:999px!important}
+.owner-header-actions>button{min-height:38px!important;border:1px solid #d0d5dd!important;border-radius:10px!important;background:#fff!important;color:#344054!important;box-shadow:none!important;backdrop-filter:none!important}
+.owner-header-actions>button:hover{background:#f9fafb!important;box-shadow:0 2px 5px rgba(16,24,40,.06)!important}
+.owner-header-actions>button[style*="background: #4f46e5"],
+.owner-header-actions>button[style*="background:#4f46e5"]{background:#4f46e5!important;border-color:#4f46e5!important;color:#fff!important;box-shadow:0 2px 5px rgba(79,70,229,.18)!important}
+.owner-dashboard,.owner-analytics-page,.owner-storage-page,.owner-health-page,.owner-audit-page,.owner-domains-page,.owner-security-page{
+  max-width:1440px!important;padding:26px clamp(20px,3vw,40px) 56px!important;
+}
+.owner-main-shell section.owner-stat-grid>div,
+.owner-stat-grid>div,.owner-pulse-card,.owner-filter-card,.owner-directory,
+.owner-analytics-chart,.owner-analytics-breakdown,.owner-analytics-institutes,
+.owner-storage-stats>div,.owner-storage-summary,.owner-storage-table,
+.owner-health-hero,.owner-health-summary>div,.owner-health-check-card,.owner-health-config,
+.owner-audit-stats>div,.owner-audit-filter-card,.owner-audit-events,.owner-audit-category-card,
+.owner-domain-stats>div,.owner-domain-table,.owner-security-banner,.owner-security-card,.owner-security-detail{
+  background:#fff!important;border:1px solid #e4e7ec!important;border-radius:14px!important;
+  box-shadow:0 1px 2px rgba(16,24,40,.035)!important;backdrop-filter:none!important;
+}
+.owner-main-shell section h2,.owner-main-shell section h3{color:#101828!important;letter-spacing:-.025em}
+.owner-main-shell section p{color:#667085!important}
+.owner-directory-toolbar,.owner-analytics-institutes-head,.owner-audit-events-head{background:#f9fafb!important;border-bottom:1px solid #eaecf0!important}
+.owner-main-shell table{border-collapse:collapse!important}
+.owner-main-shell thead tr{background:#f9fafb!important}
+.owner-main-shell th{padding:11px 14px!important;color:#667085!important;font-size:10px!important;font-weight:700!important;letter-spacing:.06em!important}
+.owner-main-shell td{padding:12px 14px!important;border-bottom:1px solid #f0f1f4!important;color:#344054!important}
+.owner-main-shell tbody tr:hover{background:#f9fafb!important}
+.owner-main-shell input:not([type=checkbox]),.owner-main-shell select,.owner-main-shell textarea{
+  min-height:40px;border:1px solid #d0d5dd!important;border-radius:9px!important;background:#fff!important;
+  color:#101828!important;box-shadow:none!important;backdrop-filter:none!important;
+}
+.owner-main-shell input:focus,.owner-main-shell select:focus,.owner-main-shell textarea:focus{
+  border-color:#818cf8!important;box-shadow:0 0 0 3px rgba(99,102,241,.12)!important;
+}
+.owner-main-shell button{border-radius:9px!important;box-shadow:none!important;backdrop-filter:none!important}
+.owner-main-shell button:focus-visible,.owner-sidebar button:focus-visible{outline:3px solid rgba(129,140,248,.45)!important;outline-offset:2px}
+.owner-main-shell [role=dialog]>div{background:#fff!important;border:1px solid #eaecf0!important;border-radius:18px!important;box-shadow:0 24px 64px rgba(16,24,40,.20)!important;backdrop-filter:none!important}
+.owner-main-shell [role=dialog]{background:rgba(16,24,40,.48)!important;backdrop-filter:blur(5px)!important}
+.owner-main-shell .owner-section-placeholder{background:#fff!important;border:1px solid #e4e7ec!important;border-radius:16px!important;box-shadow:none!important;backdrop-filter:none!important}
+@media(max-width:900px){
+  .owner-main-shell{margin-left:0!important}
+  .owner-sidebar{width:270px!important}
+  .owner-header{padding:18px 20px 18px 72px!important}
+  .owner-sidebar-toggle{top:16px!important;left:16px!important;background:#111827!important;border:1px solid #344054!important;box-shadow:none!important}
+}
+@media(max-width:760px){
+  .owner-header{padding:68px 16px 16px!important;border-radius:0 0 16px 16px!important}
+  .owner-header h1{font-size:24px!important}
+  .owner-header-inner{display:flex!important;align-items:flex-start!important;flex-direction:column!important;gap:10px!important}
+  .owner-header-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;gap:8px!important}
+  .owner-header-actions>span{grid-column:1/-1!important;grid-row:auto!important}
+  .owner-header-actions>button{grid-column:auto!important;grid-row:auto!important;width:100%!important;min-width:0!important}
+  .owner-header-actions>button:last-of-type:nth-of-type(odd){grid-column:1/-1!important}
+  .owner-dashboard,.owner-analytics-page,.owner-storage-page,.owner-health-page,.owner-audit-page,.owner-domains-page,.owner-security-page{padding:16px 12px 40px!important}
+  .owner-stat-grid,.owner-analytics-stats,.owner-health-summary,.owner-security-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .owner-pulse-grid,.owner-analytics-layout,.owner-audit-layout{grid-template-columns:1fr!important}
+  .owner-main-shell section{min-width:0}
+}
+@media(max-width:430px){
+  .owner-stat-grid,.owner-analytics-stats,.owner-health-summary,.owner-security-grid{grid-template-columns:1fr 1fr!important}
+  .owner-sidebar{width:min(290px,86vw)!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .owner-sidebar-item,.owner-main-shell button,.owner-main-shell section{transition:none!important}
+}
