@@ -98,7 +98,7 @@ export default function BatchesTimetablePage() {
     if (capacity !== null && selectedStudents.length > capacity) { setError(`Capacity is ${capacity}; you selected ${selectedStudents.length}.`); return; }
     setSaving(true); setError("");
     try {
-      if (!(await hasInstitutePermission(instituteId, "academics.manage"))) throw new Error("Administrator lacks academics.manage for this institute workspace.");
+      await assertPermission("academics.manage");
       for (const m of removals) { const { error: e } = await supabase.from("batch_students").delete().eq("institute_id", instituteId).eq("batch_id", batchId).eq("student_id", String(m.student_id)); if (e) throw e; }
       for (const id of additions) await addR("batch_students", { batch_id: batchId, student_id: id, status: "active" });
       setStudentModal(null); await load(); setSuccess("Batch students updated successfully.");
@@ -150,7 +150,7 @@ export default function BatchesTimetablePage() {
     if (!deleteSchedule) return;
     setSaving(true); setError("");
     try {
-      if (!(await hasInstitutePermission(instituteId, "timetable.manage"))) throw new Error("Administrator lacks timetable.manage for this institute workspace.");
+      await assertPermission("timetable.manage");
       const { error: e } = await supabase.from("timetable_entries").delete().eq("institute_id", instituteId).eq("id", String(deleteSchedule.id));
       if (e) throw e;
       setDeleteSchedule(null); await load(); setSuccess("Timetable lecture deleted successfully.");
