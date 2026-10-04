@@ -23,6 +23,7 @@ const PANELS = [
   ["academic", "Academic setup", "Initial academic year"],
   ["features", "Features", "Enable the modules you need"],
   ["domain", "Portal access", "Custom or platform domain"],
+  ["admin", "Administrator access", "Invite the institute administrator"],
   ["custom", "Custom feature", "Request something special"],
   ["review", "Review & create", "Check everything before launch"],
 ] as const;
@@ -67,6 +68,8 @@ const blankForm = {
   academicYearStartDate: "",
   academicYearEndDate: "",
   hostname: "",
+  adminEmail: "",
+  adminRole: "institute_admin",
   customRequestTitle: "",
   customRequestDescription: "",
 };
@@ -121,8 +124,13 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
     slug: string;
     status: string;
     enabled: number;
+    instituteId: string;
     domain: string | null;
     token: string | null;
+    adminEmail: string | null;
+    adminRole: string | null;
+    adminInviteStatus: "not_requested" | "sent" | "failed";
+    adminInviteError: string | null;
   } | null>(null);
   const [draftId, setDraftId] = useState("");
 
@@ -282,6 +290,15 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
     setPanel(next);
   };
 
+  const sendAdminInvitation = async (instituteId: string, email: string, roleKey: string) => {
+    const response = await supabase.functions.invoke("platform-invite-admin", {
+      body: { instituteId, email: email.trim().toLowerCase(), roleKey },
+    });
+    if (response.error) throw response.error;
+    if (response.data?.error) throw new Error(String(response.data.error));
+    return response.data as { invitationId?: string; status?: string };
+  };
+
   const createInstitute = async () => {
     const issue = validationError(panel, true);
     if (issue) {
@@ -334,15 +351,41 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
       const row = Array.isArray(result.data) ? result.data[0] : result.data;
       if (!row?.institute_id) throw new Error("The onboarding transaction returned no institute ID.");
 
+      const adminEmail = form.adminEmail.trim().toLowerCase();
+      const adminRole = form.adminRole.trim() || "institute_admin";
+      let adminInviteStatus: "not_requested" | "sent" | "failed" = "not_requested";
+      let adminInviteError: string | null = null;
+
+      if (adminEmail) {
+        try {
+          await sendAdminInvitation(String(row.institute_id), adminEmail, adminRole);
+          adminInviteStatus = "sent";
+        } catch (inviteError) {
+          adminInviteStatus = "failed";
+          adminInviteError = inviteError instanceof Error ? inviteError.message : "Unable to send the administrator invitation.";
+        }
+      }
+
       setCreated({
+        instituteId: String(row.institute_id),
         name: String(row.institute_name || form.name),
         slug: String(row.institute_slug || slugify(form.slug)),
         status: String(row.institute_status || "trial"),
         enabled: Number(row.enabled_feature_count || enabledFeatures.size),
         domain: row.domain_hostname ? String(row.domain_hostname) : null,
         token: row.verification_token ? String(row.verification_token) : null,
+        adminEmail: adminEmail || null,
+        adminRole: adminEmail ? adminRole : null,
+        adminInviteStatus,
+        adminInviteError,
       });
-      setNotice("Institute created successfully. Its complete tenant configuration is now stored.");
+      setNotice(
+        adminInviteStatus === "sent"
+          ? "Institute created successfully and the administrator invitation was sent."
+          : adminInviteStatus === "failed"
+            ? "Institute created successfully, but the administrator invitation could not be sent. You can retry it below."
+            : "Institute created successfully. Its complete tenant configuration is now stored."
+      );
       setPanel("review");
       onCreated();
     } catch (e) {
@@ -434,6 +477,33 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
                   <div className="lg-onboarding-summary-grid" style={{ marginTop: 16 }}>
                     <div style={{ padding: 14, borderRadius: 14, background: "#f8fafc" }}><div style={{ fontSize: 10, color: "#64748b" }}>Portal slug</div><b>{created.slug}</b></div>
                     <div style={{ padding: 14, borderRadius: 14, background: "#f8fafc" }}><div style={{ fontSize: 10, color: "#64748b" }}>Portal domain</div><b>{created.domain || "Configure later"}</b></div>
+                  </div>
+                  <div style={{ marginTop: 14, padding: 14, borderRadius: 14, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <div style={{ fontSize: 10, color: "#64748b", fontWeight: 900 }}>ADMINISTRATOR ACCESS</div>
+                    {created.adminEmail ? (
+                      <>
+                        <div style={{ marginTop: 5, fontWeight: 900 }}>{created.adminEmail}</div>
+                        <div style={{ marginTop: 3, fontSize: 11, color: "#64748b" }}>{created.adminRole === "institute_owner" ? "Institute Owner" : "Institute Admin"} · {created.adminInviteStatus === "sent" ? "Invitation sent" : "Invitation failed"}</div>
+                        {created.adminInviteError && <div role="alert" style={{ marginTop: 9, padding: 10, borderRadius: 10, background: "#fff1f2", color: "#b42318", fontSize: 11 }}>{created.adminInviteError}</div>}
+                        {created.adminInviteStatus === "failed" && <button type="button" style={{ ...button(false), marginTop: 9 }} disabled={loading} onClick={async () => {
+                          setLoading(true);
+                          setError("");
+                          try {
+                            await sendAdminInvitation(created.instituteId, created.adminEmail || "", created.adminRole || "institute_admin");
+                            setCreated((current) => current ? { ...current, adminInviteStatus: "sent", adminInviteError: null } : current);
+                            setNotice("Administrator invitation sent successfully.");
+                          } catch (e) {
+                            const message = e instanceof Error ? e.message : "Unable to resend the administrator invitation.";
+                            setCreated((current) => current ? { ...current, adminInviteStatus: "failed", adminInviteError: message } : current);
+                            setError(message);
+                          } finally {
+                            setLoading(false);
+                          }
+                        }}>Retry invitation</button>}
+                      </>
+                    ) : (
+                      <div style={{ marginTop: 5, fontSize: 11, color: "#64748b" }}>No administrator invitation was requested. You can invite one later from the platform controls.</div>
+                    )}
                   </div>
                   {created.token && created.domain && (
                     <div style={{ marginTop: 14, padding: 14, borderRadius: 14, background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e" }}>
@@ -578,6 +648,27 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
                     </section>
                   )}
 
+                  {panel === "admin" && (
+                    <section>
+                      <div style={{ padding: 15, borderRadius: 15, background: "#f8fafc", border: "1px solid #e5e9f0", fontSize: 12, lineHeight: 1.55 }}>
+                        <b>Secure administrator setup</b><br />
+                        Enter the institute administrator's email. Learners Guide will send a secure invitation. <b>No shared/default password is created.</b> The administrator chooses their password when accepting the invitation.
+                      </div>
+                      <label style={{ display: "block", marginTop: 14, fontSize: 11, fontWeight: 900 }}>Administrator email
+                        <input type="email" value={form.adminEmail} onChange={(e) => setField("adminEmail", e.target.value)} placeholder="admin@academy.com" style={{ ...inputStyle, marginTop: 5 }} />
+                      </label>
+                      <label style={{ display: "block", marginTop: 12, fontSize: 11, fontWeight: 900 }}>Administrator role
+                        <select value={form.adminRole} onChange={(e) => setField("adminRole", e.target.value)} style={{ ...inputStyle, marginTop: 5 }}>
+                          <option value="institute_admin">Institute Admin</option>
+                          <option value="institute_owner">Institute Owner</option>
+                        </select>
+                      </label>
+                      <div style={{ marginTop: 12, padding: 12, borderRadius: 13, background: "#eef2ff", color: "#3730a3", fontSize: 10, lineHeight: 1.5 }}>
+                        The invitation is valid for 7 days. The administrator will set a password during activation, then use the institute portal to sign in.
+                      </div>
+                    </section>
+                  )}
+
                   {panel === "custom" && (
                     <section>
                       <div style={{ padding: 15, borderRadius: 15, background: "#f8fafc", border: "1px solid #e5e9f0", fontSize: 12, lineHeight: 1.5 }}>
@@ -601,6 +692,7 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
                           ["Academic", form.academicYearName || "Configure later", form.academicYearStartDate && form.academicYearEndDate ? form.academicYearStartDate + " → " + form.academicYearEndDate : "No initial year"],
                           ["Features", selectedCount + " enabled", Array.from(enabledFeatures).map((code) => featureByCode.get(code)?.name || code).join(", ") || "None"],
                           ["Portal", defaultPreview || "No automatic platform portal", form.hostname || "No custom domain"],
+                          ["Administrator", form.adminEmail || "Not invited", form.adminEmail ? (form.adminRole === "institute_owner" ? "Institute Owner invitation" : "Institute Admin invitation") : "You can invite an administrator later"],
                           ["Custom", form.customRequestTitle || "No custom request", form.customRequestDescription ? "Request will be queued" : "—"],
                         ].map(([title, main, meta]) => (
                           <div key={title} style={{ padding: 14, borderRadius: 15, border: "1px solid #e5e9f0", background: "#fff" }}>
