@@ -17,7 +17,6 @@ const readPermissions = [
   ["tests", "assessments.read"],
   ["test_results", "assessments.read"],
   ["timetable_entries", "timetable.read"],
-  ["parent_student_links", "guardians.read"],
 ];
 
 for (const [table, permission] of readPermissions) {
