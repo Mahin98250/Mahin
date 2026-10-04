@@ -385,7 +385,7 @@ export default function InstituteOnboardingWizard({ open, onClose, onCreated }: 
         <div className="lg-onboarding-shell">
           <aside className="lg-onboarding-nav">
             <div style={{ padding: "4px 10px 16px" }}>
-              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.4, opacity: .72 }}>LEARNERS GUIDE</div>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.4, opacity: .72 }}>MAHIN</div>
               <div id="lg-onboarding-title" style={{ fontSize: 19, fontWeight: 900, marginTop: 4 }}>Institute onboarding</div>
               <div className="lg-onboarding-nav-sub" style={{ fontSize: 11, opacity: .66, marginTop: 4 }}>Configure the tenant as a whole.</div>
             </div>
