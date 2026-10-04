@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lg/supabase";
+import { hasInstitutePermission } from "@/lg/tenant";
 import { useInstituteWorkspace } from "@/lg/tenant-context";
 
 type Row = Record<string, any>;
