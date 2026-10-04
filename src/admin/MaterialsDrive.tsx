@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lg/supabase";
-import { hasInstitutePermission } from "@/lg/tenant";
+import { getCurrentInstituteContext, hasInstitutePermission } from "@/lg/tenant";
 import { compressFile } from "@/lg/fileCompression";
 import { enqueuePdfCompressionJob } from "@/lg/pdfCompressionJobs";
 
@@ -52,7 +52,7 @@ function accessLabel(values: string[]) {
     : "No students selected";
 }
 
-export function MaterialsDrive() {
+export function MaterialsDrive() {\n  const [instituteId, setInstituteId] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
   const [files, setFiles] = useState<Material[]>([]);
   const [current, setCurrent] = useState<Folder | null>(null);
@@ -90,7 +90,7 @@ export function MaterialsDrive() {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    const [folderResult, materialResult] = await Promise.all([
+    try {\n    const context = await getCurrentInstituteContext();\n    const activeInstituteId = context.membership?.institute_id;\n    if (!activeInstituteId) throw new Error("An active institute workspace must be selected.");\n    if (!(await hasInstitutePermission(activeInstituteId, "materials.read"))) throw new Error("Administrator lacks materials.read for this institute workspace.");\n    setInstituteId(activeInstituteId);\n    const [folderResult, materialResult] = await Promise.all([
       supabase
         .from("material_folders")
         .select("id,name,parent_id,created_at,access_standards")
@@ -136,7 +136,7 @@ export function MaterialsDrive() {
     setBusy(true);
     setError("");
     try {
-      const existing = folders.find(
+      if (!instituteId) throw new Error("An active institute workspace must be selected.");\n      if (!(await hasInstitutePermission(instituteId, "materials.manage"))) throw new Error("Administrator lacks materials.manage for this institute workspace.");\n      const existing = folders.find(
         (folder) => folder.parent_id === (current?.id ?? null) && sameText(folder.name, name),
       );
       if (existing) throw new Error("A folder with this name already exists here.");
@@ -150,7 +150,7 @@ export function MaterialsDrive() {
         name,
         parent_id: current?.id ?? null,
         created_by: authData.user.id,
-        access_standards: STANDARDS.filter((value) => folderAccess.includes(value)),
+        access_standards: STANDARDS.filter((value) => folderAccess.includes(value)),\n        institute_id: instituteId,
       });
       if (insertError) throw insertError;
 
@@ -178,7 +178,7 @@ export function MaterialsDrive() {
         .update({
           access_standards: STANDARDS.filter((value) => editingAccessValues.includes(value)),
         })
-        .eq("id", editingAccess.id);
+        .eq("institute_id", instituteId)\n        .eq("id", editingAccess.id);
       if (updateError) throw updateError;
       setEditingAccess(null);
       await load();
@@ -213,9 +213,9 @@ export function MaterialsDrive() {
     setBusy(true);
     setError("");
     try {
-      const { data: allFolders, error: folderReadError } = await supabase
+      if (!instituteId) throw new Error("An active institute workspace must be selected.");\n      if (!(await hasInstitutePermission(instituteId, "materials.manage"))) throw new Error("Administrator lacks materials.manage for this institute workspace.");\n      const { data: allFolders, error: folderReadError } = await supabase
         .from("material_folders")
-        .select("id,parent_id");
+        .select("id,parent_id").eq("institute_id", instituteId);
       if (folderReadError) throw folderReadError;
 
       const ids = new Set<string>([folder.id]);
@@ -240,12 +240,12 @@ export function MaterialsDrive() {
       const { error: materialError } = await supabase
         .from("materials")
         .delete()
-        .in("folder_id", [...ids]);
+        .eq("institute_id", instituteId).in("folder_id", [...ids]);
       if (materialError) throw materialError;
       const { error: folderError } = await supabase
         .from("material_folders")
         .delete()
-        .in("id", [...ids]);
+        .eq("institute_id", instituteId).in("id", [...ids]);
       if (folderError) throw folderError;
 
       if (current && ids.has(current.id)) setCurrent(null);
@@ -269,11 +269,11 @@ export function MaterialsDrive() {
 
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-    const path = `institute/${instituteId}/materials/${crypto.randomUUID()}.${ext}`;
+    if (!instituteId) { setError("An active institute workspace must be selected."); return; }\n    const path = `institute/${instituteId}/materials/${crypto.randomUUID()}.${ext}`;
     setBusy(true);
     setError("");
     try {
-      const compressed = await compressFile(file);
+      if (!(await hasInstitutePermission(instituteId, "materials.manage"))) throw new Error("Administrator lacks materials.manage for this institute workspace.");\n      const compressed = await compressFile(file);
       const uploadFile = compressed.file;
       const { error: uploadError } = await supabase.storage
         .from("materials")
@@ -287,7 +287,7 @@ export function MaterialsDrive() {
         folder_id: current.id,
         storage_path: path,
         file_size: uploadFile.size,
-        mime_type: uploadFile.type || file.type || null,
+        mime_type: uploadFile.type || file.type || null,\n        institute_id: instituteId,
       });
       if (insertError) {
         await supabase.storage.from("materials").remove([path]);
@@ -345,7 +345,7 @@ export function MaterialsDrive() {
         if (storageError) throw storageError;
       }
       if (!(await hasInstitutePermission(instituteId, "materials.manage"))) throw new Error("Administrator lacks materials.manage for this institute workspace.");
-      const { error: deleteError } = await supabase.from("materials").delete().eq("id", file.id);
+      const { error: deleteError } = await supabase.from("materials").delete().eq("institute_id", instituteId).eq("id", file.id);
       if (deleteError) throw deleteError;
       await load();
     } catch (e) {
