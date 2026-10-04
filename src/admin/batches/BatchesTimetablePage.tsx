@@ -8,6 +8,11 @@ import { CLASSES, DAYS, SECTIONS, SUBJECTS, css, emptySchedule, type Row, type O
 
 export default function BatchesTimetablePage() {
   const { instituteId } = useInstituteWorkspace();
+  const assertPermission = async (permission: string) => {
+    const activeInstituteId = instituteId;
+    if (!activeInstituteId) throw new Error("An active institute workspace must be selected.");
+    if (!(await hasInstitutePermission(activeInstituteId, permission))) throw new Error(`Administrator lacks ${permission} for this institute workspace.`);
+  };
   const [tab, setTab] = useState<"batches" | "timetable">("batches");
   const [batches, setBatches] = useState<Row[]>([]);
   const [students, setStudents] = useState<Row[]>([]);
