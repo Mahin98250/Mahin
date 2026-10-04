@@ -3,7 +3,7 @@ import { delR, gdb, C, subjectsForClasses } from "@/lg/data";
 import { supabase } from "@/lg/supabase";
 import { compressFile } from "@/lg/fileCompression";
 import { enqueuePdfCompressionJob } from "@/lg/pdfCompressionJobs";
-import { getCurrentInstituteContext } from "@/lg/tenant";
+import { getCurrentInstituteContext, hasInstitutePermission } from "@/lg/tenant";
 
 type Row = Record<string, any>;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
@@ -25,6 +25,7 @@ export default function HomeworkPage() {
       const context = await getCurrentInstituteContext();
       const instituteId = context.membership?.institute_id;
       if (!instituteId) throw new Error("An active institute workspace must be selected.");
+      if (!(await hasInstitutePermission(instituteId, "homework.read"))) throw new Error("Administrator lacks homework.read for this institute workspace.");
       const [hw, bs, ts] = await Promise.all([
         supabase.from("homework").select("id,tid,cls,sec,batch_id,subject,desc,given,due,completedby,pdfname,storage_path,file_size,mime_type,created_at").eq("institute_id", instituteId).order("created_at", { ascending: false }),
         gdb("batches"),
@@ -55,6 +56,7 @@ export default function HomeworkPage() {
       const context = await getCurrentInstituteContext();
       const instituteId = context.membership?.institute_id;
       if (!instituteId) throw new Error("An active institute workspace must be selected.");
+      if (!(await hasInstitutePermission(instituteId, "homework.manage"))) throw new Error("Administrator lacks homework.manage for this institute workspace.");
       let uploadFile = file;
       if (file) {
         const optimized = await compressFile(file, setProcessing);
@@ -62,7 +64,7 @@ export default function HomeworkPage() {
         if (optimized.optimized) setProcessing(`Optimized ${optimized.savingsPercent}% smaller (${(optimized.originalSize / 1048576).toFixed(1)} → ${(optimized.optimizedSize / 1048576).toFixed(1)} MB)`);
       }
       if (uploadFile) {
-        storagePath = `admin/${selectedBatch.id}/${id}-${uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        storagePath = `institute/${instituteId}/homework/${selectedBatch.id}/${id}-${uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
         const { error: uploadError } = await supabase.storage.from("homework").upload(storagePath, uploadFile, { upsert: false, contentType: "application/pdf" });
         if (uploadError) throw uploadError;
       }
@@ -82,6 +84,10 @@ export default function HomeworkPage() {
   const remove = async (row: Row) => {
     if (!window.confirm("Delete this homework?")) return;
     try {
+      const context = await getCurrentInstituteContext();
+      const instituteId = context.membership?.institute_id;
+      if (!instituteId) throw new Error("An active institute workspace must be selected.");
+      if (!(await hasInstitutePermission(instituteId, "homework.manage"))) throw new Error("Administrator lacks homework.manage for this institute workspace.");
       if (row.storage_path) {
         const { error: storageError } = await supabase.storage.from("homework").remove([row.storage_path]);
         if (storageError) throw storageError;
