@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lg/supabase";
+import { hasInstitutePermission } from "@/lg/tenant";
 import { useInstituteWorkspace } from "@/lg/tenant-context";
 import "@/admin/modern-admin-dashboard.css";
 
@@ -20,6 +21,8 @@ type Counts = {
 const EMPTY: Counts = { students: 0, teachers: 0, batches: 0, homework: 0, tests: 0, attendance: 0, fees: 0, announcements: 0 };
 
 async function count(table: string, instituteId: string) {
+  const permission = table === "students" ? "students.read" : table === "teachers" ? "teachers.read" : table === "batches" ? "academics.read" : table === "homework" ? "homework.read" : table === "tests" ? "assessments.read" : table === "attendance" ? "attendance.read" : table === "fees" ? "fees.read" : "announcements.read";
+  if (!(await hasInstitutePermission(instituteId, permission))) return 0;
   const { count: value, error } = await supabase.from(table).select("id", { count: "exact", head: true }).eq("institute_id", instituteId);
   if (error) throw error;
   return value || 0;
