@@ -14,6 +14,18 @@ const controlPlane = fs.readFileSync(
   new URL("../src/platform/PlatformOwnerControlPlane.tsx", import.meta.url),
   "utf8"
 );
+const onboardingWizard = fs.readFileSync(
+  new URL("../src/platform/InstituteOnboardingWizard.tsx", import.meta.url),
+  "utf8"
+);
+test("institute onboarding uses the current Mahin brand and exposes configured portal URLs", () => {
+  assert.match(onboardingWizard, />MAHIN<\/div>/);
+  assert.doesNotMatch(onboardingWizard, /LEARNERS GUIDE/);
+  assert.match(onboardingWizard, /default_app_domain,settings/);
+  assert.match(onboardingWizard, /default_subdomains_enabled/);
+  assert.match(onboardingWizard, /slugify\(form\.slug\.trim\(\)\) \+ "\." \+ platformDomain/);
+});
+
 
 test("final multi-tenant provisioning creates platform-managed default subdomains when enabled", () => {
   assert.match(migration, /default_subdomains_enabled/);
