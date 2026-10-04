@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lg/supabase";
 import { compressFile } from "@/lg/fileCompression";
 import { enqueuePdfCompressionJob } from "@/lg/pdfCompressionJobs";
-import { getCurrentInstituteContext } from "@/lg/tenant";
+import { getCurrentInstituteContext, hasInstitutePermission } from "@/lg/tenant";
 
 type Folder={id:string;name:string;parent_id:string|null;created_at:string;access_standards:string[]};
 type Material={id:string;title?:string;name?:string;folder_id:string|null;storage_path?:string|null;file_size?:number|null;mime_type?:string|null;created_at:string};
