@@ -64,7 +64,7 @@ const directAdminFiles = [
   "src/admin/ModernAdminDashboard.tsx",
 ].map(path => [path, readFileSync(path, "utf8")]);
 
-assert.doesNotMatch(migration, /array\\['users','/);
+assert.doesNotMatch(migration, /array\['users','/);
 assert.match(migration, /Fail closed if a mapped table ever loses its tenant boundary/);
 for (const [path, source] of directAdminFiles) {
   assert.match(source, /hasInstitutePermission/, `Expected direct admin permission guard in ${path}`);
