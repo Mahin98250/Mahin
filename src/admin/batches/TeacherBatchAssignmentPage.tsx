@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { gdb } from "@/lg/data";
 import { supabase } from "@/lg/supabase";
+import { hasInstitutePermission } from "@/lg/tenant";
 import { getCurrentInstituteContext } from "@/lg/tenant";
 
 type Row = Record<string, any> & { id?: string | number };

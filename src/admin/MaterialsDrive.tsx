@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lg/supabase";
+import { hasInstitutePermission } from "@/lg/tenant";
 import { compressFile } from "@/lg/fileCompression";
 import { enqueuePdfCompressionJob } from "@/lg/pdfCompressionJobs";
 
@@ -144,6 +145,7 @@ export function MaterialsDrive() {
       if (authError || !authData.user)
         throw new Error("Your administrator session has expired. Please sign in again.");
 
+      if (!(await hasInstitutePermission(instituteId, "materials.manage"))) throw new Error("Administrator lacks materials.manage for this institute workspace.");
       const { error: insertError } = await supabase.from("material_folders").insert({
         name,
         parent_id: current?.id ?? null,
@@ -267,7 +269,7 @@ export function MaterialsDrive() {
 
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-    const path = `${crypto.randomUUID()}.${ext}`;
+    const path = `institute/${instituteId}/materials/${crypto.randomUUID()}.${ext}`;
     setBusy(true);
     setError("");
     try {
@@ -278,6 +280,7 @@ export function MaterialsDrive() {
         .upload(path, uploadFile, { upsert: false, contentType: uploadFile.type || file.type || undefined });
       if (uploadError) throw uploadError;
 
+      if (!(await hasInstitutePermission(instituteId, "materials.manage"))) throw new Error("Administrator lacks materials.manage for this institute workspace.");
       const { error: insertError } = await supabase.from("materials").insert({
         title: safe,
         name: safe,
@@ -341,6 +344,7 @@ export function MaterialsDrive() {
           .remove([file.storage_path]);
         if (storageError) throw storageError;
       }
+      if (!(await hasInstitutePermission(instituteId, "materials.manage"))) throw new Error("Administrator lacks materials.manage for this institute workspace.");
       const { error: deleteError } = await supabase.from("materials").delete().eq("id", file.id);
       if (deleteError) throw deleteError;
       await load();

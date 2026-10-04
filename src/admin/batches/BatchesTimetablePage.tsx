@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { C, addR, delR, gdb, updR } from "@/lg/data";
 import { supabase } from "@/lg/supabase";
 import { useInstituteWorkspace } from "@/lg/tenant-context";
+import { hasInstitutePermission } from "@/lg/tenant";
 import { Button, Field, Modal } from "./BatchesTimetableControls";
 import { CLASSES, DAYS, SECTIONS, SUBJECTS, css, emptySchedule, type Row, type Option } from "./BatchesTimetableConstants";
 
@@ -37,6 +38,8 @@ export default function BatchesTimetablePage() {
     }
     setLoading(true); setError("");
     try {
+      if (!(await hasInstitutePermission(instituteId, "academics.read"))) throw new Error("Administrator lacks academics.read for this institute workspace.");
+      if (!(await hasInstitutePermission(instituteId, "timetable.read"))) throw new Error("Administrator lacks timetable.read for this institute workspace.");
       const [b, s, m, t, tt] = await Promise.all([
         gdb("batches"),
         gdb("students"),
@@ -94,6 +97,7 @@ export default function BatchesTimetablePage() {
     if (capacity !== null && selectedStudents.length > capacity) { setError(`Capacity is ${capacity}; you selected ${selectedStudents.length}.`); return; }
     setSaving(true); setError("");
     try {
+      if (!(await hasInstitutePermission(instituteId, "academics.manage"))) throw new Error("Administrator lacks academics.manage for this institute workspace.");
       for (const m of removals) { const { error: e } = await supabase.from("batch_students").delete().eq("institute_id", instituteId).eq("batch_id", batchId).eq("student_id", String(m.student_id)); if (e) throw e; }
       for (const id of additions) await addR("batch_students", { batch_id: batchId, student_id: id, status: "active" });
       setStudentModal(null); await load(); setSuccess("Batch students updated successfully.");
@@ -122,6 +126,7 @@ export default function BatchesTimetablePage() {
     if (scheduleForm.end <= scheduleForm.start) { setError("End time must be after start time."); return; }
     setSaving(true); setError("");
     try {
+      if (!(await hasInstitutePermission(instituteId, "timetable.manage"))) throw new Error("Administrator lacks timetable.manage for this institute workspace.");
       const base = { batch_id: scheduleForm.batchId, teacher_id: scheduleForm.teacherId, subject_names: subjects, subject_name: subjects.join(" + "), start_time: scheduleForm.start, end_time: scheduleForm.end, room_id: scheduleForm.room || null, status: "active" };
       if (editingSchedule) {
         const dayNo = DAYS.indexOf(scheduleForm.days[0]) + 1;
@@ -144,6 +149,7 @@ export default function BatchesTimetablePage() {
     if (!deleteSchedule) return;
     setSaving(true); setError("");
     try {
+      if (!(await hasInstitutePermission(instituteId, "timetable.manage"))) throw new Error("Administrator lacks timetable.manage for this institute workspace.");
       const { error: e } = await supabase.from("timetable_entries").delete().eq("institute_id", instituteId).eq("id", String(deleteSchedule.id));
       if (e) throw e;
       setDeleteSchedule(null); await load(); setSuccess("Timetable lecture deleted successfully.");
