@@ -55,6 +55,8 @@ export default function TeacherBatchAssignmentPage() {
     const context = await getCurrentInstituteContext();
     const instituteId = context.membership?.institute_id;
     if (!instituteId) throw new Error("An active institute workspace must be selected.");
+    if (!(await hasInstitutePermission(instituteId, "academics.manage"))) throw new Error("Administrator lacks academics.manage for this institute workspace.");
+    if (!(await hasInstitutePermission(instituteId, "timetable.manage"))) throw new Error("Administrator lacks timetable.manage for this institute workspace.");
     setError("");
     setMessage("");
     if (!batchId || !teacherId || !subjectIds.length || !days.length || !start || !end) {
