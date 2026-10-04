@@ -76,7 +76,7 @@ export default function BatchesTimetablePage() {
     if (capacity !== null && (!Number.isInteger(capacity) || capacity <= 0)) { setError("Capacity must be a positive whole number."); return; }
     setSaving(true); setError("");
     try {
-      if (!(await hasInstitutePermission(instituteId, "academics.manage"))) throw new Error("Administrator lacks academics.manage for this institute workspace.");
+      await assertPermission("academics.manage");
       const payload = { name: batchForm.name.trim(), code: batchForm.name.trim().toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, ""), cls: batchForm.cls, sec: batchForm.sec || "All", capacity, status: batchForm.status || "active", description: batchForm.description.trim() };
       if (editingBatch) await updR("batches", editingBatch.id, payload); else await addR("batches", { id: `batch-${Date.now()}`, ...payload });
       setBatchModal(false); await load(); setSuccess(editingBatch ? "Batch updated successfully." : "Batch created successfully.");
@@ -127,7 +127,7 @@ export default function BatchesTimetablePage() {
     if (scheduleForm.end <= scheduleForm.start) { setError("End time must be after start time."); return; }
     setSaving(true); setError("");
     try {
-      if (!(await hasInstitutePermission(instituteId, "timetable.manage"))) throw new Error("Administrator lacks timetable.manage for this institute workspace.");
+      await assertPermission("timetable.manage");
       const base = { batch_id: scheduleForm.batchId, teacher_id: scheduleForm.teacherId, subject_names: subjects, subject_name: subjects.join(" + "), start_time: scheduleForm.start, end_time: scheduleForm.end, room_id: scheduleForm.room || null, status: "active" };
       if (editingSchedule) {
         const dayNo = DAYS.indexOf(scheduleForm.days[0]) + 1;
