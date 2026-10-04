@@ -8,7 +8,6 @@ const migration = readFileSync("supabase/migrations/20260921175000_admin_crud_pe
 const readPermissions = [
   ["students", "students.read"],
   ["teachers", "teachers.read"],
-  ["users", "people.read"],
   ["batches", "academics.read"],
   ["attendance", "attendance.read"],
   ["homework", "homework.read"],
@@ -53,3 +52,19 @@ assert.match(migration, /public\.user_has_institute_permission\(institute_id/);
 assert.match(migration, /public\.is_platform_member\(\)/);
 
 console.log("Admin CRUD/read permission contract passed.");
+
+const directAdminFiles = [
+  "src/admin/HomeworkPage.tsx",
+  "src/admin/MaterialsDrive.tsx",
+  "src/admin/MaterialsDriveV2.tsx",
+  "src/admin/batches/BatchesTimetablePage.tsx",
+  "src/admin/batches/TeacherBatchAssignmentPage.tsx",
+  "src/admin/AdminAnalytics.tsx",
+  "src/admin/ModernAdminDashboard.tsx",
+].map(path => [path, readFileSync(path, "utf8")]);
+
+assert.doesNotMatch(migration, /array\['users','/);
+assert.match(migration, /Fail closed if a mapped table ever loses its tenant boundary/);
+for (const [path, source] of directAdminFiles) {
+  assert.match(source, /hasInstitutePermission/, `Expected direct admin permission guard in ${path}`);
+}
