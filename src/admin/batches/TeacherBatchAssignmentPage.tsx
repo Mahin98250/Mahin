@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { gdb } from "@/lg/data";
 import { supabase } from "@/lg/supabase";
-import { getCurrentInstituteContext } from "@/lg/tenant";
+import { getCurrentInstituteContext, hasInstitutePermission } from "@/lg/tenant";
 
 type Row = Record<string, any> & { id?: string | number };
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
