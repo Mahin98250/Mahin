@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { C, addR, delR, gdb, updR } from "@/lg/data";
 import { supabase } from "@/lg/supabase";
 import { useInstituteWorkspace } from "@/lg/tenant-context";
+import { hasInstitutePermission } from "@/lg/tenant";
 import { Button, Field, Modal } from "./BatchesTimetableControls";
 import { CLASSES, DAYS, SECTIONS, SUBJECTS, css, emptySchedule, type Row, type Option } from "./BatchesTimetableConstants";
 
