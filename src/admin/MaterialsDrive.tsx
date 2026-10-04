@@ -92,37 +92,27 @@ export function MaterialsDrive() {
     setLoading(true);
     setError("");
     try {
-    const context = await getCurrentInstituteContext();
-    const activeInstituteId = context.membership?.institute_id;
-    if (!activeInstituteId) throw new Error("An active institute workspace must be selected.");
-    if (!(await hasInstitutePermission(activeInstituteId, "materials.read"))) throw new Error("Administrator lacks materials.read for this institute workspace.");
-    setInstituteId(activeInstituteId);
-    const [folderResult, materialResult] = await Promise.all([
-      supabase
-        .from("material_folders")
-        .select("id,name,parent_id,created_at,access_standards")
-        .order("name"),
-      supabase
-        .from("materials")
-        .select("id,title,name,folder_id,storage_path,file_size,mime_type,created_at")
-        .order("created_at", { ascending: false }),
-    ]);
-
-    const errors: string[] = [];
-    if (folderResult.error) errors.push(`Folders: ${folderResult.error.message}`);
-    else setFolders((folderResult.data || []) as Folder[]);
-    if (materialResult.error) errors.push(`Files: ${materialResult.error.message}`);
-    else setFiles((materialResult.data || []) as Material[]);
-
-    if (
-      folderResult.data &&
-      current &&
-      !folderResult.data.some((folder) => folder.id === current.id)
-    ) {
-      setCurrent(null);
+      const context = await getCurrentInstituteContext();
+      const activeInstituteId = context.membership?.institute_id;
+      if (!activeInstituteId) throw new Error("An active institute workspace must be selected.");
+      if (!(await hasInstitutePermission(activeInstituteId, "materials.read"))) throw new Error("Administrator lacks materials.read for this institute workspace.");
+      setInstituteId(activeInstituteId);
+      const [folderResult, materialResult] = await Promise.all([
+        supabase.from("material_folders").select("id,name,parent_id,created_at,access_standards").eq("institute_id", activeInstituteId).order("name"),
+        supabase.from("materials").select("id,title,name,folder_id,storage_path,file_size,mime_type,created_at").eq("institute_id", activeInstituteId).order("created_at", { ascending: false }),
+      ]);
+      const errors: string[] = [];
+      if (folderResult.error) errors.push(`Folders: ${folderResult.error.message}`);
+      else setFolders((folderResult.data || []) as Folder[]);
+      if (materialResult.error) errors.push(`Files: ${materialResult.error.message}`);
+      else setFiles((materialResult.data || []) as Material[]);
+      if (folderResult.data && current && !folderResult.data.some((folder) => folder.id === current.id)) setCurrent(null);
+      setError(errors.join(" • "));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to load study materials.");
+    } finally {
+      setLoading(false);
     }
-    setError(errors.join(" • "));
-    setLoading(false);
   }, [current]);
 
   useEffect(() => {
