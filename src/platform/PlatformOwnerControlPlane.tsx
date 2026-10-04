@@ -585,7 +585,7 @@ export default function PlatformOwnerControlPlane() {
       <button type="button" className="owner-sidebar-toggle" onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "Close owner navigation" : "Open owner navigation"} aria-expanded={sidebarOpen}>{sidebarOpen ? "×" : "☰"}</button>
       <div className={`owner-sidebar-backdrop ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
       <aside className={`owner-sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="owner-sidebar-brand"><div className="owner-sidebar-logo">LG</div><div><strong>Platform Owner</strong><span>Control Center</span></div></div>
+        <div className="owner-sidebar-brand"><div className="owner-sidebar-logo">M</div><div><strong>Platform Owner</strong><span>Control Center</span></div></div>
         <nav className="owner-sidebar-nav" aria-label="Owner navigation">
           {OWNER_NAV.map((group) => <div className="owner-sidebar-group" key={group.group}><div className="owner-sidebar-label">{group.group}</div>{group.items.map((item) => <button type="button" key={item.key} className={`owner-sidebar-item ${activeSection === item.key ? "active" : ""}`} onClick={() => selectSection(item.key)}><span className="owner-sidebar-icon" aria-hidden="true">{item.icon}</span><span>{item.label}</span></button>)}</div>)}
         </nav>
