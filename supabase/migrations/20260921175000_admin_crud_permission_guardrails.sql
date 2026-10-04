@@ -10,7 +10,6 @@ declare
   read_tables text[][] := array[
     array['students','students.read'],
     array['teachers','teachers.read'],
-    array['users','people.read'],
     array['academic_years','academics.read'],
     array['announcements','announcements.read'],
     array['attendance','attendance.read'],
@@ -35,7 +34,6 @@ declare
   write_tables text[][] := array[
     array['students','students.manage'],
     array['teachers','teachers.manage'],
-    array['users','people.manage'],
     array['academic_years','academics.manage'],
     array['announcements','announcements.manage'],
     array['attendance','attendance.manage'],
@@ -58,6 +56,33 @@ declare
     array['parent_student_links','guardians.manage']
   ];
 begin
+  -- Fail closed if a mapped table ever loses its tenant boundary.
+  foreach item slice 1 in array read_tables loop
+    if to_regclass(format('public.%I', item[1])) is null
+       or not exists (
+         select 1
+         from information_schema.columns
+         where table_schema = 'public'
+           and table_name = item[1]
+           and column_name = 'institute_id'
+       ) then
+      raise exception 'Admin permission guardrail requires public.%.institute_id', item[1];
+    end if;
+  end loop;
+
+  foreach item slice 1 in array write_tables loop
+    if to_regclass(format('public.%I', item[1])) is null
+       or not exists (
+         select 1
+         from information_schema.columns
+         where table_schema = 'public'
+           and table_name = item[1]
+           and column_name = 'institute_id'
+       ) then
+      raise exception 'Admin permission guardrail requires public.%.institute_id', item[1];
+    end if;
+  end loop;
+
   foreach item slice 1 in array read_tables loop
     execute format(
       'drop policy if exists %I on public.%I',
