@@ -56,11 +56,14 @@ test("owner onboarding is a true multi-panel wizard", () => {
     "Academic setup",
     "Features",
     "Portal access",
+    "Administrator access",
     "Custom feature",
     "Review & create",
   ]) assert.ok(wizard.includes(panel), panel);
   assert.match(wizard, /You can jump between panels at any time/);
   assert.match(wizard, /platform_onboard_institute/);
+  assert.match(wizard, /platform-invite-admin/);
+  assert.match(wizard, /No shared\/default password is created/);
 });
 
 test("feature selection manages dependencies and custom requests", () => {
