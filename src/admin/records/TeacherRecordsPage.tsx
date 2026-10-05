@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { C, addR, delR, gdb, updR } from "@/lg/data";
-import { supabase } from "@/lg/supabase";
+import { provision, nextId } from "./AdminRecordsAuth";
 import { DEFAULT_TEACHER_PASSWORD } from "./AdminRecordsConstants";
 
 type Row = Record<string, unknown> & { id: string | number };
@@ -8,20 +8,6 @@ type Row = Record<string, unknown> & { id: string | number };
 const SUBJECTS = ["Mathematics", "Science", "English", "History", "Geography", "Computer", "Hindi"];
 
 const card: React.CSSProperties = { background: "#fff", borderRadius: 20, boxShadow: "0 4px 20px rgba(15,27,61,.07)", border: "1px solid #EEF2FF", overflow: "hidden" };
-
-async function provision(loginId: string, password: string, name: string, ref: string, action: "create" | "update" | "delete" = "create", authId?: string | null) {
-  const { data, error } = await supabase.functions.invoke("admin-provision-user", { body: { action, role: "teacher", loginId, password, name, ref, authId: authId || undefined } });
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  return data as { authId?: string; email?: string; deleted?: boolean };
-}
-
-async function nextTeacherId() {
-  const rows = (await gdb("teachers")) as Row[];
-  let max = 0;
-  for (const row of rows) { const match = String(row.tid ?? "").match(/^LGT(\d+)$/i); if (match) max = Math.max(max, Number(match[1])); }
-  return `LGT${String(max + 1).padStart(2, "0")}`;
-}
 
 function Field({ label, value, onChange, ph = "", required = false, type = "text", note = "" }: { label: string; value: string; onChange: (value: string) => void; ph?: string; required?: boolean; type?: string; note?: string }) {
   return <label style={{ display: "block", marginBottom: 14 }}><span style={{ display: "block", fontSize: 12, fontWeight: 750, color: C.sub, marginBottom: 6 }}>{label}{required && <span style={{ color: C.red }}> *</span>}</span><input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={ph} required={required} style={{ width: "100%", boxSizing: "border-box", padding: "11px 13px", border: `1.5px solid ${C.border}`, borderRadius: 11, background: "#F8FAFF", color: C.text, outline: "none" }} />{note && <span style={{ display: "block", marginTop: 5, fontSize: 10, color: C.sub }}>{note}</span>}</label>;
@@ -47,7 +33,7 @@ export default function TeacherRecordsPage() {
 
   const filtered = useMemo(() => { const q = query.trim().toLowerCase(); return q ? list.filter((r) => Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(q))) : list; }, [list, query]);
 
-  const openNew = async () => { setError(""); setSuccess(""); setEditId(null); setForm({ name: "", tid: await nextTeacherId(), subject: "", phone: "", pass: DEFAULT_TEACHER_PASSWORD, status: "active" }); setModal(true); };
+  const openNew = async () => { setError(""); setSuccess(""); setEditId(null); setForm({ name: "", tid: await nextId("teachers"), subject: "", phone: "", pass: DEFAULT_TEACHER_PASSWORD, status: "active" }); setModal(true); };
   const openEdit = (row: Row) => { setError(""); setSuccess(""); setEditId(row.id); setForm({ name: String(row.name ?? ""), tid: String(row.tid ?? ""), subject: String(row.subject ?? ""), phone: String(row.phone ?? ""), pass: String(row.pass ?? DEFAULT_TEACHER_PASSWORD), status: String(row.status ?? "active") }); setModal(true); };
   const close = () => { if (!saving) { setModal(false); setEditId(null); setError(""); } };
 
@@ -59,17 +45,17 @@ export default function TeacherRecordsPage() {
         await updR("teachers", editId, { name: form.name.trim(), tid: form.tid.trim(), subject: form.subject, phone: form.phone.trim(), status: form.status, pass: form.pass || DEFAULT_TEACHER_PASSWORD, updated_at: new Date().toISOString() });
         const users = (await gdb("users")) as Row[];
         const user = users.find((u) => String(u.ref ?? "") === String(editId) && String(u.role ?? "") === "teacher");
-        const auth = await provision(form.phone.trim(), form.pass || DEFAULT_TEACHER_PASSWORD, form.name.trim(), String(editId), "update", user?.auth_id ? String(user.auth_id) : null);
+        const auth = await provision("teacher", form.phone.trim(), form.name.trim(), String(editId), "update", user?.auth_id ? String(user.auth_id) : null, form.pass || DEFAULT_TEACHER_PASSWORD);
         if (auth.authId) {
           if (user) await updR("users", user.id, { name: form.name.trim(), phone: form.phone.trim(), email: auth.email, status: form.status, pass: form.pass || DEFAULT_TEACHER_PASSWORD, auth_id: auth.authId });
           else await addR("users", { id: `u-${auth.authId}`, name: form.name.trim(), phone: form.phone.trim(), email: auth.email, role: "teacher", ref: editId, status: form.status, pass: form.pass || DEFAULT_TEACHER_PASSWORD, auth_id: auth.authId });
         }
         setSuccess("Teacher updated!");
       } else {
-        const tid = form.tid || await nextTeacherId();
+        const tid = form.tid || await nextId("teachers");
         const teacher = await addR("teachers", { id: `t-${Date.now()}`, name: form.name.trim(), tid, subject: form.subject, phone: form.phone.trim(), pass: form.pass || DEFAULT_TEACHER_PASSWORD, classes: [], status: form.status || "active", created_at: new Date().toISOString() });
         try {
-          const auth = await provision(form.phone.trim(), form.pass || DEFAULT_TEACHER_PASSWORD, form.name.trim(), String(teacher.id));
+          const auth = await provision("teacher", form.phone.trim(), form.name.trim(), String(teacher.id), "create", null, form.pass || DEFAULT_TEACHER_PASSWORD);
           await addR("users", { id: `u-${auth.authId}`, name: form.name.trim(), phone: form.phone.trim(), email: auth.email, role: "teacher", ref: teacher.id, status: form.status || "active", pass: form.pass || DEFAULT_TEACHER_PASSWORD, auth_id: auth.authId });
         } catch (accountError) { await delR("teachers", teacher.id); throw accountError; }
         setSuccess(`Teacher "${form.name.trim()}" added! Login account created ✅`);
@@ -84,7 +70,7 @@ export default function TeacherRecordsPage() {
     try {
       const users = (await gdb("users")) as Row[];
       for (const user of users.filter((u) => String(u.ref ?? "") === String(confirmId) && String(u.role ?? "") === "teacher")) {
-        try { await provision(String(user.phone ?? ""), String(user.pass ?? DEFAULT_TEACHER_PASSWORD), String(user.name ?? "Teacher"), String(confirmId), "delete", user.auth_id ? String(user.auth_id) : null); } catch { /* stale Auth accounts are already gone */ }
+        try { await provision("teacher", String(user.phone ?? ""), String(user.name ?? "Teacher"), String(confirmId), "delete", user.auth_id ? String(user.auth_id) : null); } catch { /* stale Auth accounts are already gone */ }
         await delR("users", user.id);
       }
       await delR("teachers", confirmId);
