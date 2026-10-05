@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { LGLogo } from "@/lg/ui";
 import { useInstituteWorkspace } from "@/lg/tenant-context";
-import { NotifPanel } from "@/lg/panels";
 import { supabase } from "@/lg/supabase";
 import { useInstituteFeatures } from "@/lg/institute-features";
 import { useCurrentInstitutePermissions, type AdminNavPermission } from "@/admin/admin-permissions";
