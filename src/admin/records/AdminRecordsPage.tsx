@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { C, addR, delR, gdb, updR } from "@/lg/data";
-import { supabase } from "@/lg/supabase";
 import {
   CLASSES,
   SECTIONS,
